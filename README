@@ -1,0 +1,57 @@
+﻿Proto-derivat 
+-------------
+
+A central repository of files (the proto repository). 
+Collections of files in the repository may be subscribed to (as derivats). 
+Local files are only changed when requested. 
+Differences between the local files and the repository files may be viewed. 
+
+* derive
+List all local derivats. 
+
+* derive fetch
+For each derivat fetch proto files that are not yet installed. 
+
+* derive diff
+For each derivat display a 'diff' of all derivat files against the proto files in repository. 
+
+* derive apply
+For each derivat overwrite the derivat files with files from repository. 
+
+* derive  «derivat» diff
+Display a 'diff' of all derivat files against the proto files in repository. 
+
+* derive  «derivat» fetch
+Fetch derivat files that are not yet installed. 
+
+* derive  «derivat» apply
+Overwrite derivat files with proto files from repository. 
+
+* derive «derivat» init «proto-repository» [apply]
+Import a collection of files (the derivat) from the proto-repository.
+This is a tree of files that are added to the top of the local git repository.
+If apply is not given only shows what would be done.
+The current directory must contain a directory '.git'.
+Files that already exists locally are ignored.
+Files that do not exist locally are fetched from the derivat repository.
+«proto-repository» is an absolute PATH.
+Env[ PROTOREPO ] = basepath to add to proto-repository path. 
+
+FILES 
+-----
+
+.derivats/«derivatname» 
+Each derivat has its own file. The file contains 1. repository-path 2. a list of paths. 
+
+«repo» 
+«path» 
+
+«repo»/«derivat-definition»
+«path1» 
+.. 
+«pathN» 
+
+REPOSITORY 
+----------
+
+A proto-repository must contain a ".proto-repository" file that contains a name and/or a short description of this proto repository. A recommendation is that it also is version controlled.
