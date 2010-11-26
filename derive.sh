@@ -15,9 +15,11 @@ function usage {
     echo
     echo "Invocations:"
     echo " derive"
+    echo " derive list|ls"
     echo " derive fetch"
     echo " derive diff"
     echo " derive apply"
+    echo " derive <derivat> list|ls"
     echo " derive <derivat> fetch"
     echo " derive <derivat> diff"
     echo " derive <derivat> apply"
@@ -68,6 +70,22 @@ function apply_files {
 	mkdir -p "$(dirname $F)"
 	cp "$REPO/$F" "$F"
     done
+}
+
+function derive_list {
+    DERIVAT="$1"
+    GITPATH="$(gitpath)"
+    
+    if [ -z "$GITPATH" ]; then
+	echo "derive can only be done in a git repository!" >&2
+	exit 1
+    fi
+    
+    cd $GITPATH
+    
+    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+    
+    cat $REPO/$DERIVAT
 }
 
 function derive_fetch {
@@ -163,6 +181,32 @@ if [ -z "$1" ]; then
 fi
 
 #
+# derive list
+#
+if [ "$1" = list -o "$1" = ls ]; then
+    if [ -z "$2" ]; then
+	GITPATH="$(gitpath)"
+	if [ -z "$GITPATH" ]; then
+	    echo "derive can only be done in a git repository!" >&2
+	    exit 1
+	fi
+	
+	cd $GITPATH
+	
+	if [ ! -d .derivats ]; then
+	    echo "Cannot read '.derivats'." >&2
+	    exit 2
+	fi
+	
+	for DERIVAT in .derivats/*; do
+	    derive_list $(basename $DERIVAT)
+	done
+	
+	exit
+    fi
+fi
+
+#
 # derive fetch
 #
 if [ "$1" = fetch -a -z "$2" ]; then
@@ -231,6 +275,18 @@ if [ "$1" = apply -a -z "$2" ]; then
 	derive_apply $(basename $DERIVAT)
     done
 
+    exit
+fi
+
+#
+# derive <derivat> list
+#
+if [ "$1" -a "$2" = list ]; then
+    derive_list "$1"
+    exit
+fi
+if [ "$1" -a "$2" = ls ]; then
+    derive_list "$1"
     exit
 fi
 
