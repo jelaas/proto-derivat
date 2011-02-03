@@ -50,12 +50,19 @@ function fetch_files {
 }
 
 function diff_files {
-    local F REPO
+    local F REPO FT
     REPO=$1
     
     while read F; do
 	if [ -f "$F" ]; then
-	    diff -u "$F" "$REPO/$F"
+	    FT="$(file -b -i "$F")"
+	    if [ "${FT:0:11}" = application ]; then
+		if [ "$(head -c 1024000 "$F"|md5sum)" != "$(head -c 1024000 "$REPO/$F"|md5sum)" ]; then
+		    echo "Binary file $F differs."
+		fi
+	    else
+		diff -u "$F" "$REPO/$F"
+	    fi
 	else
 	    echo "$F not yet fetched from repo."
 	fi
