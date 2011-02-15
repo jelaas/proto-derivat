@@ -56,7 +56,7 @@ function diff_files {
     while read F; do
 	if [ -f "$F" ]; then
 	    FT="$(file -b -i "$F")"
-	    if [ "${FT:0:11}" = application ]; then
+	    if [ "${FT:0:11}" = application -a "${FT:0:19}" != application/x-shell ]; then
 		if [ "$(head -c 1024000 "$F"|md5sum)" != "$(head -c 1024000 "$REPO/$F"|md5sum)" ]; then
 		    echo "Binary file $F differs."
 		fi
