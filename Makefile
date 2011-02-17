@@ -25,7 +25,6 @@
 #?install:	$(prg)
 #?	mkdir -p $(DESTDIR)$(BINDIR)
 #?	cp -f $(prg) $(DESTDIR)$(BINDIR)
-#?install:	install
 #?clean:
 #?	rm -f $(prg)
 #?tarball:	clean
@@ -50,7 +49,6 @@ all:	$(prg)
 install:	$(prg)
 	mkdir -p $(DESTDIR)$(BINDIR)
 	cp -f $(prg) $(DESTDIR)$(BINDIR)
-install:	install
 clean:
 	rm -f $(prg)
 tarball:	clean
