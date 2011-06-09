@@ -308,9 +308,13 @@ if [ "$1" -a "$2" = fetch ]; then
 fi
 
 #
-# derive <derivat> diff
+# derive <derivat> diff|check
 #
 if [ "$1" -a "$2" = diff ]; then
+    derive_diff "$1"
+    exit
+fi
+if [ "$1" -a "$2" = check ]; then
     derive_diff "$1"
     exit
 fi
