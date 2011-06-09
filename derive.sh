@@ -24,6 +24,7 @@ function usage {
     echo " derive <derivat> diff|check"
     echo " derive <derivat> apply"
     echo " derive <derivat> init <proto-repository> [apply]"
+    echo " derive init <proto-repository>/<derivat> [apply]"
 }
 
 function gitpath {
@@ -327,6 +328,18 @@ if [ "$1" -a "$2" = apply ]; then
     exit
 fi
 
+INITCMD=n
+#
+# derive init <proto-repository>/<derivat> [apply]
+#
+if [ "$1" = init -a "$2" ]; then
+    REPO="${2%/*}"
+    DERIVAT="${2##*\/}"
+    GITPATH="$(gitpath)"
+    APPLY="$3"
+    INITCMD=y
+fi
+
 #
 # derive <derivat> init <proto-repository> [apply]
 #
@@ -334,7 +347,11 @@ if [ "$1" -a "$2" = init -a "$3" ]; then
     REPO="$3"
     DERIVAT="$1"
     GITPATH="$(gitpath)"
-    
+    APPLY="$4"
+    INITCMD=y
+fi
+
+if [ "$INITCMD" = y ]; then
     if [ -z "$GITPATH" ]; then
 	echo "derive init can only be done in a git repository!" >&2
 	exit 1
@@ -352,7 +369,7 @@ if [ "$1" -a "$2" = init -a "$3" ]; then
     [ -f "$REPO/$DERIVAT" ] || exit 1
     [ -e ".derivats/$DERIVAT" ] && exit 1
     
-    if [ "$4" = apply ]; then
+    if [ "$APPLY" = apply ]; then
 	echo $REPO > .derivats/$DERIVAT
 	echo $DERIVAT >> .derivats/$DERIVAT
 	
