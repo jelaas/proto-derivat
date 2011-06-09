@@ -3,7 +3,7 @@
 # File: derive.sh
 # Implements: proto-derivat control
 #
-# Copyright: Jens Låås, UU 2010
+# Copyright: Jens Låås, UU 2010, 2011
 # Copyright license: According to GPL, see file COPYING in this directory.
 #
 
@@ -21,7 +21,7 @@ function usage {
     echo " derive apply"
     echo " derive <derivat> list|ls"
     echo " derive <derivat> fetch"
-    echo " derive <derivat> diff"
+    echo " derive <derivat> diff|check"
     echo " derive <derivat> apply"
     echo " derive <derivat> init <proto-repository> [apply]"
 }
@@ -240,25 +240,27 @@ fi
 #
 # derive diff
 #
-if [ "$1" = diff -a -z "$2" ]; then
-    GITPATH="$(gitpath)"
-    if [ -z "$GITPATH" ]; then
-	echo "derive can only be done in a git repository!" >&2
-	exit 1
+if [ "$1" = diff -o "$1" = check ]; then
+    if [ -z "$2" ]; then
+	GITPATH="$(gitpath)"
+	if [ -z "$GITPATH" ]; then
+	    echo "derive can only be done in a git repository!" >&2
+	    exit 1
+	fi
+	
+	cd $GITPATH
+	
+	if [ ! -d .derivats ]; then
+	    echo "Cannot read '.derivats'." >&2
+	    exit 2
+	fi
+	
+	for DERIVAT in .derivats/*; do
+	    derive_diff $(basename $DERIVAT)
+	done
+	
+	exit
     fi
-    
-    cd $GITPATH
-
-    if [ ! -d .derivats ]; then
-	echo "Cannot read '.derivats'." >&2
-	exit 2
-    fi
-
-    for DERIVAT in .derivats/*; do
-	derive_diff $(basename $DERIVAT)
-    done
-
-    exit
 fi
 
 #
