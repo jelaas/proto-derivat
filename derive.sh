@@ -99,8 +99,8 @@ function derive_list {
     cd $GITPATH
     
     REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
-    
-    cat $REPO/$DERIVAT
+    PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
+    cat $REPO/$PROTO
 }
 
 function derive_fetch {
@@ -119,8 +119,8 @@ function derive_fetch {
 	exit 1
     fi
     REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
-    
-    cat $REPO/$DERIVAT|fetch_files "$REPO"
+    PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
+    cat $REPO/$PROTO|fetch_files "$REPO"
 }
 
 function derive_apply {
@@ -135,8 +135,8 @@ function derive_apply {
     cd $GITPATH
     
     REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
-    
-    cat $REPO/$DERIVAT|apply_files "$REPO"
+    PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
+    cat $REPO/$PROTO|apply_files "$REPO"
 }
 
 function derive_diff {
@@ -151,8 +151,8 @@ function derive_diff {
     cd $GITPATH
     
     REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
-    
-    cat $REPO/$DERIVAT|diff_files "$REPO"
+    PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
+    cat $REPO/$PROTO|diff_files "$REPO"
 }
 
 function derive_apply {
@@ -167,8 +167,8 @@ function derive_apply {
     cd $GITPATH
     
     REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
-    
-    cat $REPO/$DERIVAT|apply_files "$REPO"
+    PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
+    cat $REPO/$PROTO|apply_files "$REPO"
 }
 
 function print_pfx {
