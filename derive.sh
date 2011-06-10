@@ -106,7 +106,11 @@ function derive_fetch {
     fi
     
     cd $GITPATH
-    
+
+    if [ ! -f ".derivats/$DERIVAT" ]; then
+	echo "ERROR: .derivats/$DERIVAT missing!" >&2
+	exit 1
+    fi
     REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
     
     cat $REPO/$DERIVAT|fetch_files "$REPO"
@@ -183,7 +187,9 @@ if [ -z "$1" ]; then
     fi
 
     for DERIVAT in .derivats/*; do
-	basename $DERIVAT
+	[ -f ".derivats/$DERIVAT" ] && REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+
+	echo $(basename $REPO)/$(basename $DERIVAT)
     done
     exit 0
 fi
@@ -232,7 +238,8 @@ if [ "$1" = fetch -a -z "$2" ]; then
     fi
 
     for DERIVAT in .derivats/*; do
-	derive_fetch $(basename $DERIVAT)
+	DERIVAT=$(basename $DERIVAT)
+	derive_fetch $DERIVAT
     done
 
     exit
@@ -257,7 +264,8 @@ if [ "$1" = diff -o "$1" = check ]; then
 	fi
 	
 	for DERIVAT in .derivats/*; do
-	    derive_diff $(basename $DERIVAT)
+	    DERIVAT=$(basename $DERIVAT)
+	    derive_diff $DERIVAT
 	done
 	
 	exit
@@ -282,7 +290,8 @@ if [ "$1" = apply -a -z "$2" ]; then
     fi
 
     for DERIVAT in .derivats/*; do
-	derive_apply $(basename $DERIVAT)
+	DERIVAT=$(basename $DERIVAT)
+	derive_apply $DERIVAT
     done
 
     exit
@@ -304,7 +313,8 @@ fi
 # derive <derivat> fetch
 #
 if [ "$1" -a "$2" = fetch ]; then
-    derive_fetch "$1"
+    DERIVAT="$1"
+    derive_fetch "$DERIVAT"
     exit
 fi
 
@@ -366,14 +376,25 @@ if [ "$INITCMD" = y ]; then
 	echo ".proto-repository missing."
 	exit 1
     fi
+
+    if [ ! -f "$REPO/.proto-repository-id" ]; then
+	echo "File: $REPO/.proto-repository-id is missing"
+	echo "Create the file with a unique id-string as content."
+	echo " Example content: dev4"
+	exit 1
+    fi
+
+    read REPOID < "$REPO/.proto-repository-id"
+
     [ -f "$REPO/$DERIVAT" ] || exit 1
     [ -e ".derivats/$DERIVAT" ] && exit 1
+    [ -e ".derivats/id::$REPOID:$DERIVAT" ] && exit 1
     
     if [ "$APPLY" = apply ]; then
-	echo $REPO > .derivats/$DERIVAT
-	echo $DERIVAT >> .derivats/$DERIVAT
+	echo $REPO > .derivats/id::$REPOID:$DERIVAT
+	echo $DERIVAT >> .derivats/id::$REPOID:$DERIVAT
 	
-	derive_fetch "$DERIVAT"
+	derive_fetch "id::$REPOID:$DERIVAT"
     else
 	cat $REPO/$DERIVAT
     fi
