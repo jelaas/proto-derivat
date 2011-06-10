@@ -203,8 +203,8 @@ if [ -z "$1" ]; then
     fi
 
     for DERIVAT in .derivats/*; do
-	[ -f ".derivats/$DERIVAT" ] && REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
-
+	DERIVAT=$(basename $DERIVAT)
+	REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
 	echo $(basename $REPO)/$(basename $DERIVAT)
     done
     exit 0
@@ -229,6 +229,7 @@ if [ "$1" = list -o "$1" = ls ]; then
 	fi
 	
 	for DERIVAT in .derivats/*; do
+	    DERIVAT=$(basename $DERIVAT)
 	    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
 	    if [ "$VERBOSE" = y ]; then
 		derive_list $(basename $DERIVAT)|print_pfx "$(basename $REPO)/$(basename $DERIVAT)"
@@ -260,9 +261,10 @@ if [ "$1" = find -a "$2" ]; then
     fi
     
     for DERIVAT in .derivats/*; do
-	if derive_list $(basename $DERIVAT)|grep -q "$FN"; then
+	DERIVAT=$(basename $DERIVAT)
+	if derive_list $DERIVAT|grep -q "$FN"; then
 	    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
-	    echo $(basename $REPO)/$(basename $DERIVAT) $(derive_list $(basename $DERIVAT)|grep "$FN")
+	    echo $(basename $REPO)/$DERIVAT $(derive_list $DERIVAT|grep "$FN")
 	fi
     done
     
