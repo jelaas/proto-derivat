@@ -15,17 +15,24 @@ function usage {
     echo
     echo "Invocations:"
     echo " derive"
-    echo " derive list|ls"
+    echo " derive [-v] list|ls"
     echo " derive fetch"
     echo " derive diff"
     echo " derive apply"
     echo " derive <derivat> list|ls"
+    echo " derive find <filename>"
     echo " derive <derivat> fetch"
     echo " derive <derivat> diff|check"
     echo " derive <derivat> apply"
     echo " derive <derivat> init <proto-repository> [apply]"
     echo " derive init <proto-repository>/<derivat> [apply]"
 }
+
+VERBOSE=n
+if [ "$1" = "-v" ]; then
+    VERBOSE=y
+    shift
+fi
 
 function gitpath {
     local P
@@ -164,6 +171,15 @@ function derive_apply {
     cat $REPO/$DERIVAT|apply_files "$REPO"
 }
 
+function print_pfx {
+    local L
+    
+    while read L; do
+	echo $1 $L
+    done
+}
+
+
 if [ "${1:0:1}" = '-' ]; then
     usage
     exit 0
@@ -213,11 +229,44 @@ if [ "$1" = list -o "$1" = ls ]; then
 	fi
 	
 	for DERIVAT in .derivats/*; do
-	    derive_list $(basename $DERIVAT)
+	    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+	    if [ "$VERBOSE" = y ]; then
+		derive_list $(basename $DERIVAT)|print_pfx "$(basename $REPO)/$(basename $DERIVAT)"
+	    else
+		derive_list $(basename $DERIVAT)
+	    fi
 	done
 	
 	exit
     fi
+fi
+
+#
+# derive find <filename>
+#
+if [ "$1" = find -a "$2" ]; then
+    FN="$2"
+    GITPATH="$(gitpath)"
+    if [ -z "$GITPATH" ]; then
+	echo "derive can only be done in a git repository!" >&2
+	exit 1
+    fi
+    
+    cd $GITPATH
+    
+    if [ ! -d .derivats ]; then
+	echo "Cannot read '.derivats'." >&2
+	exit 2
+    fi
+    
+    for DERIVAT in .derivats/*; do
+	if derive_list $(basename $DERIVAT)|grep -q "$FN"; then
+	    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+	    echo $(basename $REPO)/$(basename $DERIVAT) $(derive_list $(basename $DERIVAT)|grep "$FN")
+	fi
+    done
+    
+    exit
 fi
 
 #
