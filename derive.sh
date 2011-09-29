@@ -418,6 +418,11 @@ if [ "$INITCMD" = y ]; then
 	exit 1
     fi
     
+    if [ "${DERIVAT:~1}" != ".p" ]; then
+	echo "A derivat name must have the suffix '.p'" >&2
+	exit 1
+    fi
+
     cd $GITPATH
     
     mkdir -p .derivats
