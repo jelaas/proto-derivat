@@ -17,13 +17,14 @@ function usage {
     echo " derive"
     echo " derive [-v] list|ls"
     echo " derive fetch"
-    echo " derive diff"
+    echo " derive diff|check"
     echo " derive apply"
     echo " derive <derivat> list|ls"
     echo " derive find <filename>"
     echo " derive <derivat> fetch"
     echo " derive <derivat> diff|check"
     echo " derive <derivat> apply"
+    echo " derive <derivat> delete [apply]"
     echo " derive <derivat> init <proto-repository> [apply]"
     echo " derive init <proto-repository>/<derivat> [apply]"
 }
@@ -53,6 +54,17 @@ function fetch_files {
 	if [ ! -f "$F" ]; then
 	    mkdir -p "$(dirname $F)"
 	    cp "$REPO/$F" "$F"
+	fi
+    done
+}
+
+function delete_files {
+    local F
+    
+    while read F; do
+	if [ -e "$F" ]; then
+	    rm -f "$F"
+	    rmdir "$(dirname $F)" &> /dev/null
 	fi
     done
 }
@@ -121,6 +133,32 @@ function derive_fetch {
     REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     cat $REPO/$PROTO|fetch_files "$REPO"
+}
+
+function derive_delete {
+    DERIVAT="$1"
+    APPLY="$2"
+    GITPATH="$(gitpath)"
+    
+    if [ -z "$GITPATH" ]; then
+	echo "derive can only be done in a git repository!" >&2
+	exit 1
+    fi
+    
+    cd $GITPATH
+
+    if [ ! -f ".derivats/$DERIVAT" ]; then
+	echo "ERROR: .derivats/$DERIVAT missing!" >&2
+	exit 1
+    fi
+    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+    PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
+    if [ "$APPLY" = apply ]; then
+	cat $REPO/$PROTO|delete_files
+	rm -f ".derivats/$DERIVAT"
+    else
+	cat $REPO/$PROTO
+    fi
 }
 
 function derive_apply {
@@ -366,6 +404,15 @@ fi
 if [ "$1" -a "$2" = fetch ]; then
     DERIVAT="$1"
     derive_fetch "$DERIVAT"
+    exit
+fi
+
+#
+# derive <derivat> delete
+#
+if [ "$1" -a "$2" = delete ]; then
+    DERIVAT="$1"
+    derive_delete "$DERIVAT" "$3"
     exit
 fi
 
