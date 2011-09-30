@@ -63,7 +63,7 @@ function delete_files {
     
     while read F; do
 	if [ -e "$F" ]; then
-	    rm -f "$F"
+	    git rm -f "$F" || rm -f "$F"
 	    rmdir "$(dirname $F)" &> /dev/null
 	fi
     done
