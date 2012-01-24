@@ -41,7 +41,7 @@ function gitpath {
 
     while true; do
 	[ -d "$P/.git" ] && echo $P && return 0
-	P="$(dirname $P)"
+	P=$(dirname "$P")
 	[ "$P" = "/" ] && return 1
     done
 }
@@ -52,19 +52,20 @@ function fetch_files {
     
     while read F; do
 	if [ ! -f "$F" ]; then
-	    mkdir -p "$(dirname $F)"
+	    mkdir -p $(dirname "$F")
 	    cp "$REPO/$F" "$F"
 	fi
     done
 }
 
 function delete_files {
-    local F
+    local F DN
     
     while read F; do
 	if [ -e "$F" ]; then
 	    git rm -f "$F" || rm -f "$F"
-	    rmdir "$(dirname $F)" &> /dev/null
+	    DN=$(dirname "$F")
+	    rmdir "$DN" &> /dev/null
 	fi
     done
 }
@@ -94,7 +95,7 @@ function apply_files {
     REPO=$1
     
     while read F; do
-	mkdir -p "$(dirname $F)"
+	mkdir -p $(dirname "$F")
 	cp "$REPO/$F" "$F"
     done
 }
