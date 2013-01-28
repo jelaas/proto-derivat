@@ -55,3 +55,20 @@ REPOSITORY
 ----------
 
 A proto-repository must contain a ".proto-repository" file that contains a name and/or a short description of this proto repository. A recommendation is that it also is version controlled.
+
+TEMPLATES
+---------
+
+Basic support for making templates is implemented.
+If your prototype includes the file 'X', you make a companion file 'X.sed'.
+When proto applies the file 'X' it will use each line of 'X.sed' as input to "sed -i".
+
+Example:
+File t.txt:
+configoption=OPT1
+
+File t.txt.sed:
+s/OPT1/actualconfigtext/
+
+When applying the prototype 't.txt' will first be copied verbatim.
+Then "sed -i 's/OPT1/actualconfigtext/' t.txt" will be run.
