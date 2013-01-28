@@ -25,7 +25,7 @@
 #?install:	$(prg)
 #?	mkdir -p $(DESTDIR)$(BINDIR)
 #?	cp -f $(prg) $(DESTDIR)$(BINDIR)
-#?	ln -s $(prg) $(DESTDIR)$(BINDIR)/derive
+#?	ln -sf $(prg) $(DESTDIR)$(BINDIR)/derive
 #?clean:
 #?	rm -f $(prg)
 #?tarball:	clean
@@ -50,7 +50,7 @@ all:	$(prg)
 install:	$(prg)
 	mkdir -p $(DESTDIR)$(BINDIR)
 	cp -f $(prg) $(DESTDIR)$(BINDIR)
-	ln -s $(prg) $(DESTDIR)$(BINDIR)/derive
+	ln -sf $(prg) $(DESTDIR)$(BINDIR)/derive
 clean:
 	rm -f $(prg)
 tarball:	clean
