@@ -46,6 +46,14 @@ function gitpath {
     done
 }
 
+function sed_file {
+    local F L
+    F="$1"
+    cat "$F.sed"|while read L; do
+	sed -i "$L" "$F"
+    done
+}
+
 function fetch_files {
     local F REPO
     REPO=$1
@@ -54,6 +62,7 @@ function fetch_files {
 	if [ ! -f "$F" ]; then
 	    mkdir -p $(dirname "$F")
 	    cp "$REPO/$F" "$F"
+	    [ -f "$F.sed" ] && sed_file "$F"
 	fi
     done
 }
@@ -71,7 +80,7 @@ function delete_files {
 }
 
 function diff_files {
-    local F REPO FT
+    local F REPO FT TMPFILE
     REPO=$1
     
     while read F; do
@@ -82,7 +91,16 @@ function diff_files {
 		    echo "Binary file $F differs."
 		fi
 	    else
-		diff -u "$F" "$REPO/$F"
+		if [ -f "$F.sed" ]; then
+		    TMPFILE=/tmp/$$_$(basename "$F")
+		    cp "$REPO/$F" "$TMPFILE"
+		    cp "$F.sed" "$TMPFILE.sed"
+		    sed_file "$TMPFILE"
+		    diff -u "$F" "$TMPFILE"
+		    rm -f "$TMPFILE" "$TMPFILE.sed"
+		else
+		    diff -u "$F" "$REPO/$F"
+		fi
 	    fi
 	else
 	    echo "$F not yet fetched from repo."
@@ -97,6 +115,7 @@ function apply_files {
     while read F; do
 	mkdir -p $(dirname "$F")
 	cp "$REPO/$F" "$F"
+	[ -f "$F.sed" ] && sed_file "$F"
     done
 }
 
