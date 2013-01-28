@@ -20,7 +20,7 @@ function usage {
     echo " proto diff|check"
     echo " proto apply"
     echo " proto <prototype> list|ls"
-    echo " proto find <filename>"
+    echo " proto find|from <filename>"
     echo " proto <prototype> fetch"
     echo " proto <prototype> diff|check"
     echo " proto <prototype> apply"
@@ -303,30 +303,32 @@ fi
 #
 # proto find <filename>
 #
-if [ "$1" = find -a "$2" ]; then
-    FN="$2"
-    GITPATH="$(gitpath)"
-    if [ -z "$GITPATH" ]; then
-	echo "proto can only be done in a git repository!" >&2
-	exit 1
-    fi
-    
-    cd $GITPATH
-    
-    if [ ! -d .derivats ]; then
-	echo "Cannot read '.derivats'." >&2
-	exit 2
-    fi
-    
-    for DERIVAT in .derivats/*; do
-	DERIVAT=$(basename $DERIVAT)
-	if derive_list $DERIVAT|grep -q "$FN"; then
-	    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
-	    echo $(basename $REPO)/$DERIVAT $(derive_list $DERIVAT|grep "$FN")
+if [ "$1" = find -o "$1" = from ]; then
+    if [ "$2" ]; then
+	FN="$2"
+	GITPATH="$(gitpath)"
+	if [ -z "$GITPATH" ]; then
+	    echo "proto can only be done in a git repository!" >&2
+	    exit 1
 	fi
-    done
-    
-    exit
+	
+	cd $GITPATH
+	
+	if [ ! -d .derivats ]; then
+	    echo "Cannot read '.derivats'." >&2
+	    exit 2
+	fi
+	
+	for DERIVAT in .derivats/*; do
+	    DERIVAT=$(basename $DERIVAT)
+	    if derive_list $DERIVAT|grep -q "$FN"; then
+		REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+		echo $(basename $REPO)/$DERIVAT $(derive_list $DERIVAT|grep "$FN")
+	    fi
+	done
+	
+	exit
+    fi
 fi
 
 #
