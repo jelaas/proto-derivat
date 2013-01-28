@@ -2,51 +2,51 @@
 -------------
 
 A central repository of files (the proto repository). 
-Collections of files in the repository may be subscribed to (as derivats). 
+Collections of files in the repository may be subscribed to (as prototypes). 
 Local files are only changed when requested. 
 Differences between the local files and the repository files may be viewed. 
 
-* derive
-List all local derivats. 
+* proto
+List all local prototypes. 
 
-* derive fetch
-For each derivat fetch proto files that are not yet installed. 
+* proto fetch
+For each prototype fetch proto files that are not yet installed. 
 
-* derive diff
-For each derivat display a 'diff' of all derivat files against the proto files in repository. 
+* proto diff
+For each prototype display a 'diff' of all prototype files against the proto files in repository. 
 
-* derive apply
-For each derivat overwrite the derivat files with files from repository. 
+* proto apply
+For each prototype overwrite the prototype files with files from repository. 
 
-* derive  «derivat» diff
-Display a 'diff' of all derivat files against the proto files in repository. 
+* proto  «prototype» diff
+Display a 'diff' of all prototype files against the proto files in repository. 
 
-* derive  «derivat» fetch
-Fetch derivat files that are not yet installed. 
+* proto  «prototype» fetch
+Fetch prototype files that are not yet installed. 
 
-* derive  «derivat» apply
-Overwrite derivat files with proto files from repository. 
+* proto  «prototype» apply
+Overwrite prototype files with proto files from repository. 
 
-* derive «derivat» init «proto-repository» [apply]
-Import a collection of files (the derivat) from the proto-repository.
+* proto «prototype» init «proto-repository» [apply]
+Import a collection of files (the prototype) from the proto-repository.
 This is a tree of files that are added to the top of the local git repository.
 If apply is not given only shows what would be done.
 The current directory must contain a directory '.git'.
 Files that already exists locally are ignored.
-Files that do not exist locally are fetched from the derivat repository.
+Files that do not exist locally are fetched from the prototype repository.
 «proto-repository» is an absolute PATH.
 Env[ PROTOREPO ] = basepath to add to proto-repository path. 
 
 FILES 
 -----
 
-.derivats/«derivatname» 
-Each derivat has its own file. The file contains 1. repository-path 2. a list of paths. 
+.derivats/«prototypename» 
+Each prototype has its own file. The file contains 1. repository-path 2. a list of paths. 
 
 «repo» 
 «path» 
 
-«repo»/«derivat-definition»
+«repo»/«prototype-definition»
 «path1» 
 .. 
 «pathN» 

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# File: derive.sh
+# File: proto.sh
 # Implements: proto-derivat control
 #
 # Copyright: Jens Låås, UU 2010, 2011
@@ -11,22 +11,22 @@ VERSION=VERSION
 DATE=DATE
 
 function usage {
-    echo "derive $VERSION ($DATE)"
+    echo "proto $VERSION ($DATE)"
     echo
     echo "Invocations:"
-    echo " derive"
-    echo " derive [-v] list|ls"
-    echo " derive fetch"
-    echo " derive diff|check"
-    echo " derive apply"
-    echo " derive <derivat> list|ls"
-    echo " derive find <filename>"
-    echo " derive <derivat> fetch"
-    echo " derive <derivat> diff|check"
-    echo " derive <derivat> apply"
-    echo " derive <derivat> delete [apply]"
-    echo " derive <derivat> init <proto-repository> [apply]"
-    echo " derive init <proto-repository>/<derivat> [apply]"
+    echo " proto"
+    echo " proto [-v] list|ls"
+    echo " proto fetch"
+    echo " proto diff|check"
+    echo " proto apply"
+    echo " proto <derivat> list|ls"
+    echo " proto find <filename>"
+    echo " proto <derivat> fetch"
+    echo " proto <derivat> diff|check"
+    echo " proto <derivat> apply"
+    echo " proto <derivat> delete [apply]"
+    echo " proto <derivat> init <proto-repository> [apply]"
+    echo " proto init <proto-repository>/<derivat> [apply]"
 }
 
 VERBOSE=n
@@ -105,7 +105,7 @@ function derive_list {
     GITPATH="$(gitpath)"
     
     if [ -z "$GITPATH" ]; then
-	echo "derive can only be done in a git repository!" >&2
+	echo "proto can only be done in a git repository!" >&2
 	exit 1
     fi
     
@@ -121,7 +121,7 @@ function derive_fetch {
     GITPATH="$(gitpath)"
     
     if [ -z "$GITPATH" ]; then
-	echo "derive can only be done in a git repository!" >&2
+	echo "proto can only be done in a git repository!" >&2
 	exit 1
     fi
     
@@ -142,7 +142,7 @@ function derive_delete {
     GITPATH="$(gitpath)"
     
     if [ -z "$GITPATH" ]; then
-	echo "derive can only be done in a git repository!" >&2
+	echo "proto can only be done in a git repository!" >&2
 	exit 1
     fi
     
@@ -167,7 +167,7 @@ function derive_apply {
     GITPATH="$(gitpath)"
     
     if [ -z "$GITPATH" ]; then
-	echo "derive can only be done in a git repository!" >&2
+	echo "proto can only be done in a git repository!" >&2
 	exit 1
     fi
     
@@ -183,7 +183,7 @@ function derive_diff {
     GITPATH="$(gitpath)"
     
     if [ -z "$GITPATH" ]; then
-	echo "derive can only be done in a git repository!" >&2
+	echo "proto can only be done in a git repository!" >&2
 	exit 1
     fi
     
@@ -199,7 +199,7 @@ function derive_apply {
     GITPATH="$(gitpath)"
     
     if [ -z "$GITPATH" ]; then
-	echo "derive can only be done in a git repository!" >&2
+	echo "proto can only be done in a git repository!" >&2
 	exit 1
     fi
     
@@ -225,12 +225,12 @@ if [ "${1:0:1}" = '-' ]; then
 fi
 
 #
-# derive
+# proto
 #
 if [ -z "$1" ]; then
     GITPATH="$(gitpath)"
     if [ -z "$GITPATH" ]; then
-	echo "derive can only be done in a git repository!" >&2
+	echo "proto can only be done in a git repository!" >&2
 	exit 1
     fi
     
@@ -250,13 +250,13 @@ if [ -z "$1" ]; then
 fi
 
 #
-# derive list
+# proto list
 #
 if [ "$1" = list -o "$1" = ls ]; then
     if [ -z "$2" ]; then
 	GITPATH="$(gitpath)"
 	if [ -z "$GITPATH" ]; then
-	    echo "derive can only be done in a git repository!" >&2
+	    echo "proto can only be done in a git repository!" >&2
 	    exit 1
 	fi
 	
@@ -282,13 +282,13 @@ if [ "$1" = list -o "$1" = ls ]; then
 fi
 
 #
-# derive find <filename>
+# proto find <filename>
 #
 if [ "$1" = find -a "$2" ]; then
     FN="$2"
     GITPATH="$(gitpath)"
     if [ -z "$GITPATH" ]; then
-	echo "derive can only be done in a git repository!" >&2
+	echo "proto can only be done in a git repository!" >&2
 	exit 1
     fi
     
@@ -311,12 +311,12 @@ if [ "$1" = find -a "$2" ]; then
 fi
 
 #
-# derive fetch
+# proto fetch
 #
 if [ "$1" = fetch -a -z "$2" ]; then
     GITPATH="$(gitpath)"
     if [ -z "$GITPATH" ]; then
-	echo "derive can only be done in a git repository!" >&2
+	echo "proto can only be done in a git repository!" >&2
 	exit 1
     fi
     
@@ -336,13 +336,13 @@ if [ "$1" = fetch -a -z "$2" ]; then
 fi
 
 #
-# derive diff
+# proto diff
 #
 if [ "$1" = diff -o "$1" = check ]; then
     if [ -z "$2" ]; then
 	GITPATH="$(gitpath)"
 	if [ -z "$GITPATH" ]; then
-	    echo "derive can only be done in a git repository!" >&2
+	    echo "proto can only be done in a git repository!" >&2
 	    exit 1
 	fi
 	
@@ -363,12 +363,12 @@ if [ "$1" = diff -o "$1" = check ]; then
 fi
 
 #
-# derive apply
+# proto apply
 #
 if [ "$1" = apply -a -z "$2" ]; then
     GITPATH="$(gitpath)"
     if [ -z "$GITPATH" ]; then
-	echo "derive can only be done in a git repository!" >&2
+	echo "proto can only be done in a git repository!" >&2
 	exit 1
     fi
     
@@ -388,7 +388,7 @@ if [ "$1" = apply -a -z "$2" ]; then
 fi
 
 #
-# derive <derivat> list
+# proto <derivat> list
 #
 if [ "$1" -a "$2" = list ]; then
     derive_list "$1"
@@ -400,7 +400,7 @@ if [ "$1" -a "$2" = ls ]; then
 fi
 
 #
-# derive <derivat> fetch
+# proto <derivat> fetch
 #
 if [ "$1" -a "$2" = fetch ]; then
     DERIVAT="$1"
@@ -409,7 +409,7 @@ if [ "$1" -a "$2" = fetch ]; then
 fi
 
 #
-# derive <derivat> delete
+# proto <derivat> delete
 #
 if [ "$1" -a "$2" = delete ]; then
     DERIVAT="$1"
@@ -418,7 +418,7 @@ if [ "$1" -a "$2" = delete ]; then
 fi
 
 #
-# derive <derivat> diff|check
+# proto <derivat> diff|check
 #
 if [ "$1" -a "$2" = diff ]; then
     derive_diff "$1"
@@ -430,7 +430,7 @@ if [ "$1" -a "$2" = check ]; then
 fi
 
 #
-# derive <derivat> apply
+# proto <derivat> apply
 #
 if [ "$1" -a "$2" = apply ]; then
     derive_apply "$1"
@@ -439,7 +439,7 @@ fi
 
 INITCMD=n
 #
-# derive init <proto-repository>/<derivat> [apply]
+# proto init <proto-repository>/<derivat> [apply]
 #
 if [ "$1" = init -a "$2" ]; then
     REPO="${2%/*}"
@@ -450,7 +450,7 @@ if [ "$1" = init -a "$2" ]; then
 fi
 
 #
-# derive <derivat> init <proto-repository> [apply]
+# proto <derivat> init <proto-repository> [apply]
 #
 if [ "$1" -a "$2" = init -a "$3" ]; then
     REPO="$3"
@@ -462,7 +462,7 @@ fi
 
 if [ "$INITCMD" = y ]; then
     if [ -z "$GITPATH" ]; then
-	echo "derive init can only be done in a git repository!" >&2
+	echo "proto init can only be done in a git repository!" >&2
 	exit 1
     fi
     

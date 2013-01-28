@@ -14,7 +14,7 @@
 #%ifnswitch --mandir $(PREFIX)/share/man MANDIR
 #?V=`cat version.txt|cut -d ' ' -f 2`
 #?CC=./shpp.sh
-#?prg=derive
+#?prg=proto
 #?export LIBEXECDIR
 #?export BINDIR
 #?export SYSCONFDIR
@@ -25,6 +25,7 @@
 #?install:	$(prg)
 #?	mkdir -p $(DESTDIR)$(BINDIR)
 #?	cp -f $(prg) $(DESTDIR)$(BINDIR)
+#?	ln -s $(prg) $(DESTDIR)$(BINDIR)/derive
 #?clean:
 #?	rm -f $(prg)
 #?tarball:	clean
@@ -38,7 +39,7 @@ BINDIR= $(PREFIX)/bin
 MANDIR= $(PREFIX)/share/man
 V=`cat version.txt|cut -d ' ' -f 2`
 CC=./shpp.sh
-prg=derive
+prg=proto
 export LIBEXECDIR
 export BINDIR
 export SYSCONFDIR
@@ -49,6 +50,7 @@ all:	$(prg)
 install:	$(prg)
 	mkdir -p $(DESTDIR)$(BINDIR)
 	cp -f $(prg) $(DESTDIR)$(BINDIR)
+	ln -s $(prg) $(DESTDIR)$(BINDIR)/derive
 clean:
 	rm -f $(prg)
 tarball:	clean
