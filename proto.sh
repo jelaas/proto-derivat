@@ -19,14 +19,14 @@ function usage {
     echo " proto fetch"
     echo " proto diff|check"
     echo " proto apply"
-    echo " proto <derivat> list|ls"
+    echo " proto <prototype> list|ls"
     echo " proto find <filename>"
-    echo " proto <derivat> fetch"
-    echo " proto <derivat> diff|check"
-    echo " proto <derivat> apply"
-    echo " proto <derivat> delete [apply]"
-    echo " proto <derivat> init <proto-repository> [apply]"
-    echo " proto init <proto-repository>/<derivat> [apply]"
+    echo " proto <prototype> fetch"
+    echo " proto <prototype> diff|check"
+    echo " proto <prototype> apply"
+    echo " proto <prototype> delete [apply]"
+    echo " proto <prototype> init <proto-repository> [apply]"
+    echo " proto init <proto-repository>/<prototype> [apply]"
 }
 
 VERBOSE=n
