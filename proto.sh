@@ -3,7 +3,7 @@
 # File: proto.sh
 # Implements: proto-derivat control
 #
-# Copyright: Jens Låås, UU 2010, 2011
+# Copyright: Jens Låås, UU 2010-2013
 # Copyright license: According to GPL, see file COPYING in this directory.
 #
 
@@ -25,7 +25,7 @@ function usage {
     echo " proto <prototype> diff|check"
     echo " proto <prototype> apply"
     echo " proto <prototype> delete [apply]"
-    echo " proto <prototype> init <proto-repository> [apply]"
+    echo " proto <prototype> version <version>"
     echo " proto init <proto-repository>/<prototype> [apply]"
 }
 
@@ -44,6 +44,56 @@ function gitpath {
 	P=$(dirname "$P")
 	[ "$P" = "/" ] && return 1
     done
+}
+
+function getversion {
+    local DERIVAT V
+    DERIVAT="$1"
+    V=$(grep "^%V:" ".derivats/$DERIVAT")
+    [ "$V" ] && V="${V:3}"
+    echo $V
+}
+
+function getrepo {
+    local DERIVAT REPO PREPO PROTO V
+    DERIVAT="$1"
+    
+    PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
+    V=$(getversion "$DERIVAT")
+    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+    if ! ${REPO:0:1} = /; then
+	echo "The prototype repository path must be an absolute path (start with /)." >&2
+	echo ".derivats/$DERIVAT: $REPO" >&2
+	echo "Aborting" >&2
+	exit 1
+    fi
+
+    if [ ! -d "$REPO/.git" ]; then
+	if [ "$V" ]; then
+	    echo "$REPO is not a git repository. No version support available" >&2
+	    echo "Aborting" >&2
+	    exit 1
+	fi
+	echo $REPO
+	return
+    fi
+
+    PREPO="$(dirname $REPO)/.private_$(basename $REPO)"
+    if [ ! -d "$PREPO/.git" ]; then
+	[ -d "$PREPO" ] && exit 1
+	git clone -n $REPO $PREPO || exit 1
+    else
+	(cd $PREPO; git pull $REPO)
+    fi
+    if [ "$V" ]; then
+	if ! (cd $PREPO; git checkout "$PROTO-$V"); then
+	    echo "Could not check out version $PROTO-$V" >&2
+	    echo "Aborting" >&2
+	    exit 1
+	fi
+    fi
+
+    echo $PREPO
 }
 
 function sed_file {
@@ -130,7 +180,7 @@ function derive_list {
     
     cd $GITPATH
     
-    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+    REPO=$(getrepo "$DERIVAT")
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     cat $REPO/$PROTO
 }
@@ -150,7 +200,7 @@ function derive_fetch {
 	echo "ERROR: .derivats/$DERIVAT missing!" >&2
 	exit 1
     fi
-    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+    REPO=$(getrepo "$DERIVAT")
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     cat $REPO/$PROTO|fetch_files "$REPO"
 }
@@ -171,7 +221,7 @@ function derive_delete {
 	echo "ERROR: .derivats/$DERIVAT missing!" >&2
 	exit 1
     fi
-    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+    REPO=$(getrepo "$DERIVAT")
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     if [ "$APPLY" = apply ]; then
 	cat $REPO/$PROTO|delete_files
@@ -179,6 +229,36 @@ function derive_delete {
     else
 	cat $REPO/$PROTO
     fi
+}
+
+function derive_version {
+    DERIVAT="$1"
+    V="$2"
+    GITPATH="$(gitpath)"
+    
+    if [ -z "$GITPATH" ]; then
+	echo "proto can only be done in a git repository!" >&2
+	exit 1
+    fi
+    
+    cd $GITPATH
+
+    if [ ! -f ".derivats/$DERIVAT" ]; then
+	echo "ERROR: .derivats/$DERIVAT missing!" >&2
+	exit 1
+    fi
+    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+    OLDV=$(getversion "$DERIVAT")
+    PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
+
+    echo -n "$PROTO "
+    [ "$OLDV" } && echo -n "$OLDV => "
+    cat <<EOF > ".derivats/$DERIVAT"
+$REPO
+%V:$V
+$PROTO
+EOF
+    echo "$V"
 }
 
 function derive_apply {
@@ -192,7 +272,7 @@ function derive_apply {
     
     cd $GITPATH
     
-    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+    REPO=$(getrepo "$DERIVAT")
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     cat $REPO/$PROTO|apply_files "$REPO"
 }
@@ -208,7 +288,7 @@ function derive_diff {
     
     cd $GITPATH
     
-    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+    REPO=$(getrepo "$DERIVAT")
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     cat $REPO/$PROTO|diff_files "$REPO"
 }
@@ -224,7 +304,7 @@ function derive_apply {
     
     cd $GITPATH
     
-    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+    REPO=$(getrepo "$DERIVAT")
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     cat $REPO/$PROTO|apply_files "$REPO"
 }
@@ -261,9 +341,11 @@ if [ -z "$1" ]; then
     fi
 
     for DERIVAT in .derivats/*; do
+	[ -f "$DERIVAT" ] || continue
 	DERIVAT=$(basename $DERIVAT)
-	REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
-	echo $(basename $REPO)/$(basename $DERIVAT)
+	REPO=$(getrepo "$DERIVAT")
+	V=$(getversion "$DERIVAT")
+	echo $(basename $REPO): $(basename $DERIVAT) $V
     done
     exit 0
 fi
@@ -287,8 +369,9 @@ if [ "$1" = list -o "$1" = ls ]; then
 	fi
 	
 	for DERIVAT in .derivats/*; do
+	    [ -f "$DERIVAT" ] || continue
 	    DERIVAT=$(basename $DERIVAT)
-	    REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+	    REPO=$(getrepo "$DERIVAT")
 	    if [ "$VERBOSE" = y ]; then
 		derive_list $(basename $DERIVAT)|print_pfx "$(basename $REPO)/$(basename $DERIVAT)"
 	    else
@@ -320,9 +403,10 @@ if [ "$1" = find -o "$1" = from ]; then
 	fi
 	
 	for DERIVAT in .derivats/*; do
+	    [ -f "$DERIVAT" ] || continue
 	    DERIVAT=$(basename $DERIVAT)
 	    if derive_list $DERIVAT|grep -q "$FN"; then
-		REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+		REPO=$(getrepo "$DERIVAT")
 		echo $(basename $REPO)/$DERIVAT $(derive_list $DERIVAT|grep "$FN")
 	    fi
 	done
@@ -349,6 +433,7 @@ if [ "$1" = fetch -a -z "$2" ]; then
     fi
 
     for DERIVAT in .derivats/*; do
+	[ -f "$DERIVAT" ] || continue
 	DERIVAT=$(basename $DERIVAT)
 	derive_fetch $DERIVAT
     done
@@ -375,6 +460,7 @@ if [ "$1" = diff -o "$1" = check ]; then
 	fi
 	
 	for DERIVAT in .derivats/*; do
+	    [ -f "$DERIVAT" ] || continue
 	    DERIVAT=$(basename $DERIVAT)
 	    derive_diff $DERIVAT
 	done
@@ -401,6 +487,7 @@ if [ "$1" = apply -a -z "$2" ]; then
     fi
 
     for DERIVAT in .derivats/*; do
+	[ -f "$DERIVAT" ] || continue
 	DERIVAT=$(basename $DERIVAT)
 	derive_apply $DERIVAT
     done
@@ -435,6 +522,15 @@ fi
 if [ "$1" -a "$2" = delete ]; then
     DERIVAT="$1"
     derive_delete "$DERIVAT" "$3"
+    exit
+fi
+
+#
+# proto <derivat> version <version>
+#
+if [ "$1" -a "$2" = version ]; then
+    DERIVAT="$1"
+    derive_version "$DERIVAT" "$3"
     exit
 fi
 
