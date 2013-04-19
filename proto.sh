@@ -61,18 +61,18 @@ function getrepo {
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     V=$(getversion "$DERIVAT")
     REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
-    if ! ${REPO:0:1} = /; then
+    if [ ${REPO:0:1} != / ]; then
 	echo "The prototype repository path must be an absolute path (start with /)." >&2
 	echo ".derivats/$DERIVAT: $REPO" >&2
 	echo "Aborting" >&2
-	exit 1
+	exit 2
     fi
 
     if [ ! -d "$REPO/.git" ]; then
 	if [ "$V" ]; then
 	    echo "$REPO is not a git repository. No version support available" >&2
 	    echo "Aborting" >&2
-	    exit 1
+	    exit 2
 	fi
 	echo $REPO
 	return
@@ -81,15 +81,15 @@ function getrepo {
     PREPO="$(dirname $REPO)/.private_$(basename $REPO)"
     if [ ! -d "$PREPO/.git" ]; then
 	[ -d "$PREPO" ] && exit 1
-	git clone -n $REPO $PREPO || exit 1
+	git clone -n $REPO $PREPO &>/dev/null || exit 2
     else
-	(cd $PREPO; git pull $REPO)
+	(cd $PREPO; git pull $REPO &>/dev/null; git fetch --tags $REPO &>/dev/null)
     fi
     if [ "$V" ]; then
-	if ! (cd $PREPO; git checkout "$PROTO-$V"); then
+	if ! (cd $PREPO; git checkout "$PROTO-$V" &>/dev/null); then
 	    echo "Could not check out version $PROTO-$V" >&2
 	    echo "Aborting" >&2
-	    exit 1
+	    exit 2
 	fi
     fi
 
@@ -181,6 +181,7 @@ function derive_list {
     cd $GITPATH
     
     REPO=$(getrepo "$DERIVAT")
+    [ "$REPO" ] || exit 1
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     cat $REPO/$PROTO
 }
@@ -201,6 +202,7 @@ function derive_fetch {
 	exit 1
     fi
     REPO=$(getrepo "$DERIVAT")
+    [ "$REPO" ] || exit 1
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     cat $REPO/$PROTO|fetch_files "$REPO"
 }
@@ -222,6 +224,7 @@ function derive_delete {
 	exit 1
     fi
     REPO=$(getrepo "$DERIVAT")
+    [ "$REPO" ] || exit 1
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     if [ "$APPLY" = apply ]; then
 	cat $REPO/$PROTO|delete_files
@@ -248,11 +251,16 @@ function derive_version {
 	exit 1
     fi
     REPO=$(cat ".derivats/$DERIVAT"|head -n 1)
+    if [ ! -d "$REPO/.git" ]; then
+	    echo "$REPO is not a git repository. No version support available" >&2
+	    echo "Aborting" >&2
+	    exit 1
+    fi
     OLDV=$(getversion "$DERIVAT")
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
 
     echo -n "$PROTO "
-    [ "$OLDV" } && echo -n "$OLDV => "
+    [ "$OLDV" ] && echo -n "$OLDV => "
     cat <<EOF > ".derivats/$DERIVAT"
 $REPO
 %V:$V
@@ -273,6 +281,7 @@ function derive_apply {
     cd $GITPATH
     
     REPO=$(getrepo "$DERIVAT")
+    [ "$REPO" ] || exit 1
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     cat $REPO/$PROTO|apply_files "$REPO"
 }
@@ -289,6 +298,7 @@ function derive_diff {
     cd $GITPATH
     
     REPO=$(getrepo "$DERIVAT")
+    [ "$REPO" ] || exit 1
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     cat $REPO/$PROTO|diff_files "$REPO"
 }
@@ -305,6 +315,7 @@ function derive_apply {
     cd $GITPATH
     
     REPO=$(getrepo "$DERIVAT")
+    [ "$REPO" ] || exit 1
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     cat $REPO/$PROTO|apply_files "$REPO"
 }
@@ -344,6 +355,7 @@ if [ -z "$1" ]; then
 	[ -f "$DERIVAT" ] || continue
 	DERIVAT=$(basename $DERIVAT)
 	REPO=$(getrepo "$DERIVAT")
+	[ "$REPO" ] || continue
 	V=$(getversion "$DERIVAT")
 	echo $(basename $REPO): $(basename $DERIVAT) $V
     done
@@ -372,6 +384,7 @@ if [ "$1" = list -o "$1" = ls ]; then
 	    [ -f "$DERIVAT" ] || continue
 	    DERIVAT=$(basename $DERIVAT)
 	    REPO=$(getrepo "$DERIVAT")
+	    [ "$REPO" ] || continue
 	    if [ "$VERBOSE" = y ]; then
 		derive_list $(basename $DERIVAT)|print_pfx "$(basename $REPO)/$(basename $DERIVAT)"
 	    else
@@ -407,6 +420,7 @@ if [ "$1" = find -o "$1" = from ]; then
 	    DERIVAT=$(basename $DERIVAT)
 	    if derive_list $DERIVAT|grep -q "$FN"; then
 		REPO=$(getrepo "$DERIVAT")
+		[ "$REPO" ] || continue
 		echo $(basename $REPO)/$DERIVAT $(derive_list $DERIVAT|grep "$FN")
 	    fi
 	done
@@ -584,7 +598,7 @@ if [ "$INITCMD" = y ]; then
     fi
     
     if [ "${DERIVAT:~1}" != ".p" ]; then
-	echo "A derivat name must have the suffix '.p'" >&2
+	echo "A prototype name must have the suffix '.p'" >&2
 	exit 1
     fi
 
