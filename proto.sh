@@ -91,6 +91,12 @@ function getrepo {
 	    echo "Aborting" >&2
 	    exit 2
 	fi
+    else
+	if ! (cd $PREPO; git checkout" &>/dev/null); then
+	    echo "Could not check out $PREPO" >&2
+	    echo "Aborting" >&2
+	    exit 2
+	fi
     fi
 
     echo $PREPO
