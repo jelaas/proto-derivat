@@ -451,8 +451,8 @@ if [ "$1" = find -o "$1" = from ]; then
 	    if derive_list $DERIVAT|grep -q "$FN"; then
 		REPO=$(getrepo "$DERIVAT")
 		[ "$REPO" ] || continue
-		REPONAME=$(getrepo "$DERIVAT")
-		echo $REPONAME/$DERIVAT $(derive_list $DERIVAT|grep "$FN")
+		REPONAME=$(getreponame "$DERIVAT")
+		derive_list $DERIVAT|grep "$FN"|print_pfx $REPONAME/$DERIVAT
 	    fi
 	done
 	
