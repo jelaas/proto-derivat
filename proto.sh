@@ -171,17 +171,18 @@ function diff_files {
 }
 
 function apply_files {
-    local F REPO COPY
+    local F REPO COPY V1 V2
     REPO=$1
     
     while read F; do
-	mkdir -p $(dirname "$F")
 	COPY=y
 	if [ ! -f "$F.sed" ]; then
 	    if [ -e "$F" -a "$REPO/$F" ]; then
 		if [ $(stat -c %s "$F") = $(stat -c %s "$REPO/$F") ]; then
 		    if [ -e /usr/bin/sha512sum ]; then
-			if [ $(sha512sum "$F") = $(sha512sum "$REPO/$F") ]; then
+			V1=$(cat "$F"|sha512sum)
+			V2=$(cat "$REPO/$F"|sha512sum)
+                        if [ "$V1" = "$V2" ]; then
 			    COPY=n
 			fi
 		    else
@@ -192,8 +193,10 @@ function apply_files {
 		fi
 	    fi
 	fi
-	[ "$COPY" = y -o -f "$F.sed" ] && cp "$REPO/$F" "$F"
-	[ -f "$F.sed" ] && sed_file "$F"
+	if [ "$COPY" = y -o -f "$F.sed" ]; then
+	    mkdir -p $(dirname "$F") && cp "$REPO/$F" "$F"
+	    [ -f "$F.sed" ] && sed_file "$F"
+	fi
     done
 }
 
