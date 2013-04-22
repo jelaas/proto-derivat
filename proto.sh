@@ -54,6 +54,12 @@ function getversion {
     echo $V
 }
 
+function getreponame {
+    local DERIVAT
+    DERIVAT="$1"
+    basename $(cat ".derivats/$DERIVAT"|head -n 1)
+}
+
 function getrepo {
     local DERIVAT REPO PREPO PROTO V
     DERIVAT="$1"
@@ -165,12 +171,28 @@ function diff_files {
 }
 
 function apply_files {
-    local F REPO
+    local F REPO COPY
     REPO=$1
     
     while read F; do
 	mkdir -p $(dirname "$F")
-	cp "$REPO/$F" "$F"
+	COPY=y
+	if [ ! -f "$F.sed" ]; then
+	    if [ -e "$F" -a "$REPO/$F" ]; then
+		if [ $(stat -c %s "$F") = $(stat -c %s "$REPO/$F") ]; then
+		    if [ -e /usr/bin/sha512sum ]; then
+			if [ $(sha512sum "$F") = $(sha512sum "$REPO/$F") ]; then
+			    COPY=n
+			fi
+		    else
+			if [ $(md5sum "$F") = $(md5sum "$REPO/$F") ]; then
+                            COPY=n
+			fi
+		    fi
+		fi
+	    fi
+	fi
+	if [ "$COPY" = y -o -f "$F.sed" ] && cp "$REPO/$F" "$F"
 	[ -f "$F.sed" ] && sed_file "$F"
     done
 }
@@ -201,7 +223,7 @@ function derive_fetch {
 	exit 1
     fi
     
-    cd $GITPATH
+    cd $GITPATH || exit 1
 
     if [ ! -f ".derivats/$DERIVAT" ]; then
 	echo "ERROR: .derivats/$DERIVAT missing!" >&2
@@ -223,7 +245,7 @@ function derive_delete {
 	exit 1
     fi
     
-    cd $GITPATH
+    cd $GITPATH || exit 1
 
     if [ ! -f ".derivats/$DERIVAT" ]; then
 	echo "ERROR: .derivats/$DERIVAT missing!" >&2
@@ -250,7 +272,7 @@ function derive_version {
 	exit 1
     fi
     
-    cd $GITPATH
+    cd $GITPATH || exit 1
 
     if [ ! -f ".derivats/$DERIVAT" ]; then
 	echo "ERROR: .derivats/$DERIVAT missing!" >&2
@@ -284,7 +306,7 @@ function derive_apply {
 	exit 1
     fi
     
-    cd $GITPATH
+    cd $GITPATH || exit 1
     
     REPO=$(getrepo "$DERIVAT")
     [ "$REPO" ] || exit 1
@@ -361,9 +383,10 @@ if [ -z "$1" ]; then
 	[ -f "$DERIVAT" ] || continue
 	DERIVAT=$(basename $DERIVAT)
 	REPO=$(getrepo "$DERIVAT")
+	REPONAME=$(getreponame "$DERIVAT")
 	[ "$REPO" ] || continue
 	V=$(getversion "$DERIVAT")
-	echo $(basename $REPO): $(basename $DERIVAT) $V
+	echo $REPONAME: $(basename $DERIVAT) $V
     done
     exit 0
 fi
@@ -390,9 +413,10 @@ if [ "$1" = list -o "$1" = ls ]; then
 	    [ -f "$DERIVAT" ] || continue
 	    DERIVAT=$(basename $DERIVAT)
 	    REPO=$(getrepo "$DERIVAT")
+	    REPONAME=$(getrepo "$DERIVAT")
 	    [ "$REPO" ] || continue
 	    if [ "$VERBOSE" = y ]; then
-		derive_list $(basename $DERIVAT)|print_pfx "$(basename $REPO)/$(basename $DERIVAT)"
+		derive_list $(basename $DERIVAT)|print_pfx "$REPONAME)/$(basename $DERIVAT)"
 	    else
 		derive_list $(basename $DERIVAT)
 	    fi
@@ -427,7 +451,8 @@ if [ "$1" = find -o "$1" = from ]; then
 	    if derive_list $DERIVAT|grep -q "$FN"; then
 		REPO=$(getrepo "$DERIVAT")
 		[ "$REPO" ] || continue
-		echo $(basename $REPO)/$DERIVAT $(derive_list $DERIVAT|grep "$FN")
+		REPONAME=$(getrepo "$DERIVAT")
+		echo $REPONAME/$DERIVAT $(derive_list $DERIVAT|grep "$FN")
 	    fi
 	done
 	
