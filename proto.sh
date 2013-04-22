@@ -192,7 +192,7 @@ function apply_files {
 		fi
 	    fi
 	fi
-	if [ "$COPY" = y -o -f "$F.sed" ] && cp "$REPO/$F" "$F"
+	[ "$COPY" = y -o -f "$F.sed" ] && cp "$REPO/$F" "$F"
 	[ -f "$F.sed" ] && sed_file "$F"
     done
 }
