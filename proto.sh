@@ -54,6 +54,25 @@ function getversion {
     echo $V
 }
 
+function getderivat {
+    local DERIVAT f CANDIDATE
+    DERIVAT="$1"
+    [ -f ".derivats/$DERIVAT" ] && echo $DERIVAT && return
+    for f in .derivats/id::*:$DERIVAT; do
+	[ -f "$f" ] || continue
+	if [ "$CANDIDATE" ]; then
+	    echo "Prototype name $DERIVAT is ambigous."
+	    echo "Aborting" >&2
+	    exit 2
+	fi
+	CANDIDATE="$f"
+    done
+    [ "$CANDIDATE" ] && basename "$CANDIDATE" && return
+    echo "Prototype $DERIVAT not linked to this repository" >&2
+    echo "Aborting" >&2
+    exit 2
+}
+
 function getreponame {
     local DERIVAT
     DERIVAT="$1"
@@ -63,6 +82,12 @@ function getreponame {
 function getrepo {
     local DERIVAT REPO PREPO PROTO V
     DERIVAT="$1"
+    
+    if [ ! -f ".derivats/$DERIVAT" ]; then
+	echo "Prototype $DERIVAT not linked to this repository" >&2
+	echo "Aborting" >&2
+	exit 2
+    fi
     
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
     V=$(getversion "$DERIVAT")
@@ -201,7 +226,7 @@ function apply_files {
 }
 
 function derive_list {
-    DERIVAT="$1"
+    DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
     GITPATH="$(gitpath)"
     
     if [ -z "$GITPATH" ]; then
@@ -218,7 +243,7 @@ function derive_list {
 }
 
 function derive_fetch {
-    DERIVAT="$1"
+    DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
     GITPATH="$(gitpath)"
     
     if [ -z "$GITPATH" ]; then
@@ -239,7 +264,7 @@ function derive_fetch {
 }
 
 function derive_delete {
-    DERIVAT="$1"
+    DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
     APPLY="$2"
     GITPATH="$(gitpath)"
     
@@ -266,7 +291,7 @@ function derive_delete {
 }
 
 function derive_version {
-    DERIVAT="$1"
+    DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
     V="$2"
     GITPATH="$(gitpath)"
     
@@ -301,7 +326,7 @@ EOF
 }
 
 function derive_apply {
-    DERIVAT="$1"
+    DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
     GITPATH="$(gitpath)"
     
     if [ -z "$GITPATH" ]; then
@@ -318,7 +343,7 @@ function derive_apply {
 }
 
 function derive_diff {
-    DERIVAT="$1"
+    DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
     GITPATH="$(gitpath)"
     
     if [ -z "$GITPATH" ]; then
@@ -335,7 +360,7 @@ function derive_diff {
 }
 
 function derive_apply {
-    DERIVAT="$1"
+    DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
     GITPATH="$(gitpath)"
     
     if [ -z "$GITPATH" ]; then
