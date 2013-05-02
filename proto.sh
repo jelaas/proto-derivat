@@ -202,8 +202,12 @@ function apply_files {
     
     while read F; do
 	COPY=y
+	if [ ! -e "$REPO/$F" ]; then
+	    echo "$F missing in prototype"
+	    continue
+	fi
 	if [ ! -f "$F.sed" ]; then
-	    if [ -e "$F" -a "$REPO/$F" ]; then
+	    if [ -e "$F" -a -e "$REPO/$F" ]; then
 		if [ $(stat -c %s "$F") = $(stat -c %s "$REPO/$F") ]; then
 		    if [ -e /usr/bin/sha512sum ]; then
 			V1=$(cat "$F"|sha512sum)
