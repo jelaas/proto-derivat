@@ -113,6 +113,7 @@ function getrepo {
     if [ ! -d "$PREPO/.git" ]; then
 	[ -d "$PREPO" ] && exit 1
 	git clone -n $REPO $PREPO &>/dev/null || exit 2
+	chmod g+w $PREPO
     else
 	(cd $PREPO; git pull $REPO &>/dev/null; git fetch --tags $REPO &>/dev/null)
     fi
