@@ -173,6 +173,11 @@ function diff_files {
     
     while read F; do
 	if [ -f "$F" ]; then
+	    if [ ! -e "$REPO/$F" ]; then
+		echo "$F missing in prototype"
+		continue
+	    fi
+	    
 	    FT="$(file -b -i "$F")"
 	    if [ "${FT:0:11}" = application -a "${FT:0:19}" != application/x-shell ]; then
 		if [ "$(head -c 1024000 "$F"|md5sum)" != "$(head -c 1024000 "$REPO/$F"|md5sum)" ]; then
