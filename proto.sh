@@ -39,7 +39,7 @@ function silentflock {
     local LOCKFILE="$1"
     shift
     (
-        flock -s 200 2>/dev/null
+        flock 200 2>/dev/null
 	"$@"
     ) 200>$LOCKFILE
 }
@@ -579,7 +579,7 @@ if [ "$1" = apply -a -z "$2" ]; then
     fi
 
     (
-        flock -s 201 2>/dev/null
+        flock 201 2>/dev/null
 	for DERIVAT in .derivats/*; do
 	    [ -f "$DERIVAT" ] || continue
 	    DERIVAT=$(basename $DERIVAT)
@@ -633,7 +633,7 @@ if [ "$1" -a "$2" = version ]; then
     fi
 
     (
-        flock -s 201 2>/dev/null
+        flock 201 2>/dev/null
 	derive_version "$DERIVAT" "$V"
     ) 201>$GITPATH/.protolockfile
     
@@ -663,7 +663,7 @@ if [ "$1" -a "$2" = apply ]; then
     fi
     DERIVAT="$1"
     (
-        flock -s 201 2>/dev/null
+        flock 201 2>/dev/null
 	silentflock "/tmp/.protolockfile_$1" derive_apply "$DERIVAT"
     ) 201>$GITPATH/.protolockfile
     
