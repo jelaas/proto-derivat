@@ -518,7 +518,7 @@ if [ "$1" = fetch -a -z "$2" ]; then
     for DERIVAT in .derivats/*; do
 	[ -f "$DERIVAT" ] || continue
 	DERIVAT=$(basename $DERIVAT)
-	derive_fetch $DERIVAT
+	flock "/tmp/.protolockfile_$DERIVAT" derive_fetch "$DERIVAT"
     done
 
     exit
@@ -545,7 +545,7 @@ if [ "$1" = diff -o "$1" = check ]; then
 	for DERIVAT in .derivats/*; do
 	    [ -f "$DERIVAT" ] || continue
 	    DERIVAT=$(basename $DERIVAT)
-	    derive_diff $DERIVAT
+	    flock "/tmp/.protolockfile_$DERIVAT" derive_diff $DERIVAT
 	done
 	
 	exit
@@ -569,12 +569,15 @@ if [ "$1" = apply -a -z "$2" ]; then
 	exit 2
     fi
 
-    for DERIVAT in .derivats/*; do
-	[ -f "$DERIVAT" ] || continue
-	DERIVAT=$(basename $DERIVAT)
-	derive_apply $DERIVAT
-    done
-
+    (
+        flock -s 200
+	for DERIVAT in .derivats/*; do
+	    [ -f "$DERIVAT" ] || continue
+	    DERIVAT=$(basename $DERIVAT)
+	    flock "/tmp/.protolockfile_$DERIVAT" derive_apply $DERIVAT
+	done
+    ) 200>$GITPATH/.protolockfile
+    
     exit
 fi
 
@@ -595,7 +598,7 @@ fi
 #
 if [ "$1" -a "$2" = fetch ]; then
     DERIVAT="$1"
-    derive_fetch "$DERIVAT"
+    flock "/tmp/.protolockfile_$DERIVAT" derive_fetch "$DERIVAT"
     exit
 fi
 
@@ -604,7 +607,7 @@ fi
 #
 if [ "$1" -a "$2" = delete ]; then
     DERIVAT="$1"
-    derive_delete "$DERIVAT" "$3"
+    flock "/tmp/.protolockfile_$DERIVAT" derive_delete "$DERIVAT" "$3"
     exit
 fi
 
@@ -613,7 +616,18 @@ fi
 #
 if [ "$1" -a "$2" = version ]; then
     DERIVAT="$1"
-    derive_version "$DERIVAT" "$3"
+    GITPATH="$(gitpath)"
+    V="$3"
+    if [ -z "$GITPATH" ]; then
+	echo "proto can only be done in a git repository!" >&2
+	exit 1
+    fi
+
+    (
+        flock -s 200
+	derive_version "$DERIVAT" "$V"
+    ) 200>$GITPATH/.protolockfile
+    
     exit
 fi
 
@@ -621,11 +635,11 @@ fi
 # proto <derivat> diff|check
 #
 if [ "$1" -a "$2" = diff ]; then
-    derive_diff "$1"
+    flock "/tmp/.protolockfile_$1" derive_diff "$1"
     exit
 fi
 if [ "$1" -a "$2" = check ]; then
-    derive_diff "$1"
+    flock "/tmp/.protolockfile_$1" derive_diff "$1"
     exit
 fi
 
@@ -633,7 +647,17 @@ fi
 # proto <derivat> apply
 #
 if [ "$1" -a "$2" = apply ]; then
-    derive_apply "$1"
+    GITPATH="$(gitpath)"
+    if [ -z "$GITPATH" ]; then
+	echo "proto can only be done in a git repository!" >&2
+	exit 1
+    fi
+    DERIVAT="$1"
+    (
+        flock -s 200
+	flock "/tmp/.protolockfile_$1" derive_apply "$DERIVAT"
+    ) 200>$GITPATH/.protolockfile
+    
     exit
 fi
 
@@ -698,7 +722,7 @@ if [ "$INITCMD" = y ]; then
 	echo $REPO > .derivats/id::$REPOID:$DERIVAT
 	echo $DERIVAT >> .derivats/id::$REPOID:$DERIVAT
 	
-	derive_fetch "id::$REPOID:$DERIVAT"
+	flock "/tmp/.protolockfile_$DERIVAT" derive_fetch "id::$REPOID:$DERIVAT"
     else
 	cat $REPO/$DERIVAT
     fi
