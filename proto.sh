@@ -35,6 +35,15 @@ if [ "$1" = "-v" ]; then
     shift
 fi
 
+function silentflock {
+    local LOCKFILE="$1"
+    shift
+    (
+        flock -s 200 2>/dev/null
+	"$@"
+    ) 200>$LOCKFILE
+}
+
 function gitpath {
     local P
     P="$(pwd)"
@@ -518,7 +527,7 @@ if [ "$1" = fetch -a -z "$2" ]; then
     for DERIVAT in .derivats/*; do
 	[ -f "$DERIVAT" ] || continue
 	DERIVAT=$(basename $DERIVAT)
-	flock "/tmp/.protolockfile_$DERIVAT" derive_fetch "$DERIVAT"
+	silentflock "/tmp/.protolockfile_$DERIVAT" derive_fetch "$DERIVAT"
     done
 
     exit
@@ -545,7 +554,7 @@ if [ "$1" = diff -o "$1" = check ]; then
 	for DERIVAT in .derivats/*; do
 	    [ -f "$DERIVAT" ] || continue
 	    DERIVAT=$(basename $DERIVAT)
-	    flock "/tmp/.protolockfile_$DERIVAT" derive_diff $DERIVAT
+	    silentflock "/tmp/.protolockfile_$DERIVAT" derive_diff $DERIVAT
 	done
 	
 	exit
@@ -570,13 +579,13 @@ if [ "$1" = apply -a -z "$2" ]; then
     fi
 
     (
-        flock -s 200
+        flock -s 201 2>/dev/null
 	for DERIVAT in .derivats/*; do
 	    [ -f "$DERIVAT" ] || continue
 	    DERIVAT=$(basename $DERIVAT)
-	    flock "/tmp/.protolockfile_$DERIVAT" derive_apply $DERIVAT
+	    silentflock "/tmp/.protolockfile_$DERIVAT" derive_apply $DERIVAT
 	done
-    ) 200>$GITPATH/.protolockfile
+    ) 201>$GITPATH/.protolockfile
     
     exit
 fi
@@ -598,7 +607,7 @@ fi
 #
 if [ "$1" -a "$2" = fetch ]; then
     DERIVAT="$1"
-    flock "/tmp/.protolockfile_$DERIVAT" derive_fetch "$DERIVAT"
+    silentflock "/tmp/.protolockfile_$DERIVAT" derive_fetch "$DERIVAT"
     exit
 fi
 
@@ -607,7 +616,7 @@ fi
 #
 if [ "$1" -a "$2" = delete ]; then
     DERIVAT="$1"
-    flock "/tmp/.protolockfile_$DERIVAT" derive_delete "$DERIVAT" "$3"
+    silentflock "/tmp/.protolockfile_$DERIVAT" derive_delete "$DERIVAT" "$3"
     exit
 fi
 
@@ -624,9 +633,9 @@ if [ "$1" -a "$2" = version ]; then
     fi
 
     (
-        flock -s 200
+        flock -s 201 2>/dev/null
 	derive_version "$DERIVAT" "$V"
-    ) 200>$GITPATH/.protolockfile
+    ) 201>$GITPATH/.protolockfile
     
     exit
 fi
@@ -635,11 +644,11 @@ fi
 # proto <derivat> diff|check
 #
 if [ "$1" -a "$2" = diff ]; then
-    flock "/tmp/.protolockfile_$1" derive_diff "$1"
+    silentflock "/tmp/.protolockfile_$1" derive_diff "$1"
     exit
 fi
 if [ "$1" -a "$2" = check ]; then
-    flock "/tmp/.protolockfile_$1" derive_diff "$1"
+    silentflock "/tmp/.protolockfile_$1" derive_diff "$1"
     exit
 fi
 
@@ -654,9 +663,9 @@ if [ "$1" -a "$2" = apply ]; then
     fi
     DERIVAT="$1"
     (
-        flock -s 200
-	flock "/tmp/.protolockfile_$1" derive_apply "$DERIVAT"
-    ) 200>$GITPATH/.protolockfile
+        flock -s 201 2>/dev/null
+	silentflock "/tmp/.protolockfile_$1" derive_apply "$DERIVAT"
+    ) 201>$GITPATH/.protolockfile
     
     exit
 fi
@@ -722,7 +731,7 @@ if [ "$INITCMD" = y ]; then
 	echo $REPO > .derivats/id::$REPOID:$DERIVAT
 	echo $DERIVAT >> .derivats/id::$REPOID:$DERIVAT
 	
-	flock "/tmp/.protolockfile_$DERIVAT" derive_fetch "id::$REPOID:$DERIVAT"
+	silentflock "/tmp/.protolockfile_$DERIVAT" derive_fetch "id::$REPOID:$DERIVAT"
     else
 	cat $REPO/$DERIVAT
     fi
