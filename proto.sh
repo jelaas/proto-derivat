@@ -26,7 +26,7 @@ function usage {
     echo " proto <prototype> apply"
     echo " proto <prototype> delete [apply]"
     echo " proto <prototype> version <version>"
-    echo " proto init <proto-repository>/<prototype> [apply]"
+    echo " proto init <proto-repository>/<prototype> [version <version>] [apply]"
 }
 
 VERBOSE=n
@@ -672,12 +672,17 @@ fi
 
 INITCMD=n
 #
-# proto init <proto-repository>/<derivat> [apply]
+# proto init <proto-repository>/<derivat> [version <version>] [apply]
 #
 if [ "$1" = init -a "$2" ]; then
     REPO="${2%/*}"
     DERIVAT="${2##*\/}"
     GITPATH="$(gitpath)"
+    V=""
+    if [ "$3" = version ]; then
+	V="$4"
+	shift 2
+    fi
     APPLY="$3"
     INITCMD=y
 fi
@@ -691,6 +696,7 @@ if [ "$1" -a "$2" = init -a "$3" ]; then
     GITPATH="$(gitpath)"
     APPLY="$4"
     INITCMD=y
+    V=""
 fi
 
 if [ "$INITCMD" = y ]; then
@@ -729,9 +735,11 @@ if [ "$INITCMD" = y ]; then
     
     if [ "$APPLY" = apply ]; then
 	echo $REPO > .derivats/id::$REPOID:$DERIVAT
+	[ "$V" ] && echo "%V:$V" >> .derivats/id::$REPOID:$DERIVAT
 	echo $DERIVAT >> .derivats/id::$REPOID:$DERIVAT
 	
 	silentflock "/tmp/.protolockfile_$DERIVAT" derive_fetch "id::$REPOID:$DERIVAT"
+	exit
     else
 	cat $REPO/$DERIVAT
     fi
