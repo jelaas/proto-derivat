@@ -19,13 +19,14 @@ function usage {
     echo " proto fetch"
     echo " proto diff|check"
     echo " proto apply"
+    echo " proto <prototype>"
     echo " proto <prototype> list|ls"
     echo " proto find|from <filename>"
     echo " proto <prototype> fetch"
     echo " proto <prototype> diff|check"
     echo " proto <prototype> apply"
     echo " proto <prototype> delete [apply]"
-    echo " proto <prototype> version <version>"
+    echo " proto <prototype> version [<version>]"
     echo " proto init <proto-repository>/<prototype> [version <version>] [apply]"
 }
 
@@ -332,6 +333,11 @@ function derive_version {
 	    exit 1
     fi
     OLDV=$(getversion "$DERIVAT")
+    if [ -z "$V" ]; then
+	[ "$OLDV" ] || return 1
+	echo "$OLDV"
+	return 0
+    fi
     PROTO=$(cat ".derivats/$DERIVAT"|tail -n 1)
 
     echo -n "$PROTO "
@@ -744,6 +750,24 @@ if [ "$INITCMD" = y ]; then
 	cat $REPO/$DERIVAT
     fi
     exit 0
+fi
+
+#
+# proto <derivat>
+#
+if [ "$1" ]; then
+    GITPATH="$(gitpath)"
+    if [ -z "$GITPATH" ]; then
+	echo "proto can only be done in a git repository!" >&2
+	exit 2
+    fi
+    DERIVAT=$( (getderivat "$1") );
+    if [ "$DERIVAT" ]; then
+	echo true
+	exit 0
+    fi
+    echo false
+    exit 1
 fi
 
 usage
