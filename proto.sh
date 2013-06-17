@@ -17,8 +17,8 @@ function usage {
     echo " proto"
     echo " proto [-v] list|ls"
     echo " proto fetch"
-    echo " proto diff|check"
-    echo " proto apply"
+    echo " proto [-v] diff|check"
+    echo " proto [-v] apply"
     echo " proto <prototype>"
     echo " proto <prototype> list|ls"
     echo " proto find|from <filename>"
@@ -239,8 +239,9 @@ function apply_files {
 	    fi
 	fi
 	if [ "$COPY" = y -o -f "$F.sed" ]; then
+	    [ "$VERBOSE" = y ] && echo "Copying $F" >&2
 	    mkdir -p $(dirname "$F") && cp "$REPO/$F" "$F"
-	    [ -f "$F.sed" ] && sed_file "$F"
+	    [ -f "$F.sed" ] && sed_file "$F" && [ "$VERBOSE" = y ] && echo "Applying $F.sed" >&2
 	fi
     done
 }
@@ -560,6 +561,7 @@ if [ "$1" = diff -o "$1" = check ]; then
 	for DERIVAT in .derivats/*; do
 	    [ -f "$DERIVAT" ] || continue
 	    DERIVAT=$(basename $DERIVAT)
+	    [ "$VERBOSE" = y ] && echo "Checking $DERIVAT" >&2
 	    silentflock "/tmp/.protolockfile_$DERIVAT" derive_diff $DERIVAT
 	done
 	
@@ -589,6 +591,7 @@ if [ "$1" = apply -a -z "$2" ]; then
 	for DERIVAT in .derivats/*; do
 	    [ -f "$DERIVAT" ] || continue
 	    DERIVAT=$(basename $DERIVAT)
+	    [ "$VERBOSE" = y ] && echo "Applying $DERIVAT" >&2
 	    silentflock "/tmp/.protolockfile_$DERIVAT" derive_apply $DERIVAT
 	done
     ) 201>$GITPATH/.protolockfile
