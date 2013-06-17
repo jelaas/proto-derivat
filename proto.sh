@@ -71,7 +71,7 @@ function getderivat {
     for f in .derivats/id::*:$DERIVAT; do
 	[ -f "$f" ] || continue
 	if [ "$CANDIDATE" ]; then
-	    echo "Prototype name $DERIVAT is ambigous."
+	    echo "Prototype name $DERIVAT is ambigous." >&2
 	    echo "Aborting" >&2
 	    exit 2
 	fi
