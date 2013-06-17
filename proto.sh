@@ -66,7 +66,7 @@ function getversion {
 
 function getderivat {
     local DERIVAT f CANDIDATE
-    DERIVAT="$1"
+    DERIVAT=$(basename "$1")
     [ -f ".derivats/$DERIVAT" ] && echo $DERIVAT && return
     for f in .derivats/id::*:$DERIVAT; do
 	[ -f "$f" ] || continue
@@ -533,8 +533,9 @@ if [ "$1" = fetch -a -z "$2" ]; then
 
     for DERIVAT in .derivats/*; do
 	[ -f "$DERIVAT" ] || continue
-	DERIVAT=$(basename $DERIVAT)
-	silentflock "/tmp/.protolockfile_$DERIVAT" derive_fetch "$DERIVAT"
+	DERIVAT=$(getderivat $DERIVAT); [ "$DERIVAT" ] || exit 2
+	REPO=$(getreponame $DERIVAT)
+	silentflock "/tmp/.protolockfile_$REPO" derive_fetch "$DERIVAT"
     done
 
     exit
@@ -560,9 +561,10 @@ if [ "$1" = diff -o "$1" = check ]; then
 	
 	for DERIVAT in .derivats/*; do
 	    [ -f "$DERIVAT" ] || continue
-	    DERIVAT=$(basename $DERIVAT)
+	    DERIVAT=$(getderivat $DERIVAT); [ "$DERIVAT" ] || exit 2
+	    REPO=$(getreponame $DERIVAT)
 	    [ "$VERBOSE" = y ] && echo "Checking $DERIVAT" >&2
-	    silentflock "/tmp/.protolockfile_$DERIVAT" derive_diff $DERIVAT
+	    silentflock "/tmp/.protolockfile_$REPO" derive_diff $DERIVAT
 	done
 	
 	exit
@@ -590,9 +592,10 @@ if [ "$1" = apply -a -z "$2" ]; then
         flock 201 2>/dev/null
 	for DERIVAT in .derivats/*; do
 	    [ -f "$DERIVAT" ] || continue
-	    DERIVAT=$(basename $DERIVAT)
+	    DERIVAT=$(getderivat $DERIVAT); [ "$DERIVAT" ] || exit 2
+	    REPO=$(getreponame $DERIVAT)
 	    [ "$VERBOSE" = y ] && echo "Applying $DERIVAT" >&2
-	    silentflock "/tmp/.protolockfile_$DERIVAT" derive_apply $DERIVAT
+	    silentflock "/tmp/.protolockfile_$REPO" derive_apply $DERIVAT
 	done
     ) 201>$GITPATH/.protolockfile
     
@@ -616,7 +619,9 @@ fi
 #
 if [ "$1" -a "$2" = fetch ]; then
     DERIVAT="$1"
-    silentflock "/tmp/.protolockfile_$DERIVAT" derive_fetch "$DERIVAT"
+    DERIVAT=$(getderivat $DERIVAT); [ "$DERIVAT" ] || exit 1
+    REPO=$(getreponame $DERIVAT)
+    silentflock "/tmp/.protolockfile_$REPO" derive_fetch "$DERIVAT"
     exit
 fi
 
@@ -653,11 +658,15 @@ fi
 # proto <derivat> diff|check
 #
 if [ "$1" -a "$2" = diff ]; then
-    silentflock "/tmp/.protolockfile_$1" derive_diff "$1"
+    DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
+    REPO=$(getreponame $DERIVAT)
+    silentflock "/tmp/.protolockfile_$REPO" derive_diff "$1"
     exit
 fi
 if [ "$1" -a "$2" = check ]; then
-    silentflock "/tmp/.protolockfile_$1" derive_diff "$1"
+    DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
+    REPO=$(getreponame $DERIVAT)
+    silentflock "/tmp/.protolockfile_$REPO" derive_diff "$1"
     exit
 fi
 
@@ -670,10 +679,11 @@ if [ "$1" -a "$2" = apply ]; then
 	echo "proto can only be done in a git repository!" >&2
 	exit 1
     fi
-    DERIVAT="$1"
+    DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
+    REPO=$(getreponame $DERIVAT)
     (
         flock 201 2>/dev/null
-	silentflock "/tmp/.protolockfile_$1" derive_apply "$DERIVAT"
+	silentflock "/tmp/.protolockfile_$REPO" derive_apply "$DERIVAT"
     ) 201>$GITPATH/.protolockfile
     
     exit
