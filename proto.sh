@@ -658,12 +658,24 @@ fi
 # proto <derivat> diff|check
 #
 if [ "$1" -a "$2" = diff ]; then
+    GITPATH="$(gitpath)"
+    if [ -z "$GITPATH" ]; then
+	echo "proto can only be done in a git repository!" >&2
+	exit 1
+    fi
+    cd $GITPATH
     DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
     REPO=$(getreponame $DERIVAT)
     silentflock "/tmp/.protolockfile_$REPO" derive_diff "$1"
     exit
 fi
 if [ "$1" -a "$2" = check ]; then
+    GITPATH="$(gitpath)"
+    if [ -z "$GITPATH" ]; then
+	echo "proto can only be done in a git repository!" >&2
+	exit 1
+    fi
+    cd $GITPATH
     DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
     REPO=$(getreponame $DERIVAT)
     silentflock "/tmp/.protolockfile_$REPO" derive_diff "$1"
@@ -679,6 +691,7 @@ if [ "$1" -a "$2" = apply ]; then
 	echo "proto can only be done in a git repository!" >&2
 	exit 1
     fi
+    cd $GITPATH
     DERIVAT=$(getderivat $1); [ "$DERIVAT" ] || exit 1
     REPO=$(getreponame $DERIVAT)
     (
