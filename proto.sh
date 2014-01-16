@@ -125,6 +125,10 @@ function getrepo {
 	git clone -n $REPO $PREPO &>/dev/null || exit 2
 	chmod g+w $PREPO
     else
+	if [ -f $PREPO/.git/ORIG_HEAD.lock ]; then
+	    echo "WARNING: Lock file present. Pull will most likely fail" >&2
+	    echo "Remove $PREPO/.git/ORIG_HEAD.lock" >&2
+	fi
 	(cd $PREPO; git pull $REPO &>/dev/null; git fetch --tags $REPO &>/dev/null)
     fi
     if [ "$V" ]; then
